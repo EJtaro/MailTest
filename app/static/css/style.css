@@ -1,0 +1,215 @@
+* { box-sizing: border-box; }
+
+.main-layout { display: flex; }
+
+body { margin: 0; }
+
+/* ヘッダー部：帯状に上に表示 */
+.site-header {
+  width: 100%;
+  background-color: #dbeeff;      /* 薄めの青 */
+  padding: 1.2rem 2rem;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 軽く影をつけると自然 */
+}
+/* タイトル見出し */
+.site-title {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #004080;  /* 濃いめの青文字 */
+}
+.header-line {
+  display: flex;
+  align-items: center;     /* 上下中央揃え */
+  justify-content: space-between; /* 左右に分かれる場合 */
+  height: 100%;             /* ヘッダーと同じ高さに */
+  padding: 0 0;          /* 内側の余白（左右） */
+  gap: 1rem;                /* 要素間のスペース */
+}
+.header-line h3 {
+  margin: 0;
+}
+.header-line p {
+  margin: 0 0 0 auto;
+  font-size: 1rem;
+  color: #555;
+}
+/* サイドバー */
+nav.sidebar {
+  width: 200px;
+  background: #f0f0f0;
+  padding: 1rem;
+}
+.sidebar-link {
+  color: #333;
+  text-decoration: none;
+  display: inline;            /* インライン要素にする */
+  padding: 0;                 /* 余白をなくす */
+  margin: 0;
+}
+.sidebar-link:active,
+.sidebar-link:visited {
+  color: #007BFF; /* visited（紫）を打ち消す */
+}
+.sidebar-link:hover {
+  color: #0056b3;
+}
+.link-button {
+  background: none;
+  color: #007BFF;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.link-button:hover {
+  color: #0056b3;
+}
+/* メイン */
+main.content {
+  padding: 2rem;
+  flex: 1;
+  text-align: center;
+}
+
+a { display: block; margin: 1rem 0; }
+
+/* モーダルウィンドウ */
+/* モーダル共通スタイル */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景 */
+  justify-content: center; /* 水平方向の中央 */
+  align-items: center;     /* 垂直方向の中央 */
+  z-index: 1000;           /* 他要素の上に表示 */
+}
+.modal-content {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  min-width: 300px;
+  max-width: 500px;         /* ←追加: 横幅の最大値 */
+  width: fit-content;       /* ←親に合わせて広がりすぎないように */
+  text-align: center;
+}
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+/* 送信確認モーダル */
+.confirm-modal-content {
+  min-width: 300px;
+  max-width: 400px;
+  max-height: 60vh;
+}
+/* メール履歴モーダル */
+.history-modal-content {
+  min-width: 700px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.history-modal-content 
+.table-wrapper {
+  overflow-x: auto;   /* 横スクロール対応（テーブルが大きい場合） */
+}
+.history-modal-content table {
+  width: 100%;        /* テーブル幅は親幅に合わせる */
+  border-collapse: collapse;
+}
+
+/* テーブル */
+/* テーブルのスタイル全体 */
+.styled-table {
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+}
+.styled-table thead th {  /* ヘッダー行の固定 */
+  position: sticky;
+  top: 0;
+  background-color: #f9f9f9;                  /* 背景必須：透明だと裏が透ける */
+  z-index: 1;                                   /* 他の要素より上に表示 */
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);  /* 視覚的な区切り線 */
+}
+.styled-table th,
+.styled-table td {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+.styled-table th {
+  cursor: pointer;  /* カーソルを「ポインタ（手）」に */
+  transition: background-color 0.2s;
+}
+.styled-table th:hover {
+  background-color: #f0f0f0;  /* ホバー時の背景色 */
+  color: #333;                /* ホバー時の文字色 */
+  text-decoration: underline;   /* 下線を表示（オプション） */
+}
+/* テーブルの外枠 */
+.table-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 1rem 0;
+  margin-right: auto;        /* 中央配置 */
+  margin-left: auto;         /* 中央配置 */
+  font-family: sans-serif;
+}
+/* テーブルのスクロール周り */
+.table-wrapper {
+  max-height: 300px;         /* 高さ制限 */
+  width: 100%;
+  overflow-y: auto;          /* 縦スクロール */
+  overflow-x: auto;          /* 横スクロール */
+  border: 1px solid #ccc;
+  margin: 0;
+  padding: 0;
+}
+
+/* 送信先テーブル */
+.recipients_table {
+  margin: 0 auto;     /* 上下の余白を消す */
+  border-collapse: collapse; /* 任意：ボーダーをすっきり見せる */
+  width: 100%;
+}
+.recipients_table td:first-child,
+.recipients_table th:first-child {
+  text-align: center;
+  width: 120px;
+}
+
+/* スピンボタン(矢印無効化) */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;   /* Chrome, Safari, Edge */
+  margin: 0;
+}
+/* 外観を変更 */
+input[type=number] {
+  appearance: textfield;         /* 標準仕様対応 */
+  -moz-appearance: textfield;    /* Firefox対応 */
+}
+
+textarea {
+  font-size: 1rem;
+}
+
+/* 文字寄せの共通クラス(強制) */
+.align-left {
+    text-align: left !important;
+}
+.align-center {
+    text-align: center !important;
+}
+.align-right {
+    text-align: right !important;
+}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}送信先管理{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/recipient_master.css') }}">
+{% endblock %}
+
+{% block header %}
+    <div class="header-line">
+        <h3>送信先管理画面</h3>
+        <p>ログイン中のユーザー: {{ user }}</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {% if message %}
+        <p style="color:red;">{{ message }}</p>
+    {% endif %}
+
+    {# 送信先登録 #}
+    <form id="send-recipient-form" method="POST" action="{{ url_for('master.recipient_master') }}" >
+        <div class="recipient-form">
+            <div class="form-row">
+                <label>社員番号:</label>
+                <input type="number" name="employee_no" value="" min="0" step="1" required><br><br>
+            </div>
+
+            <div class="form-row">
+                <label>部署:</label>
+                <input type="text" name="department" value="" required><br><br>
+            </div>
+
+            <div class="form-row">
+                <label>社員名:</label>
+                <input type="text" name="name" value=""  required><br><br>
+            </div>
+            
+            <div class="form-row">
+                <label>アドレス:</label>
+                <input type="email" name="email" value=""  required><br><br>
+            </div>
+        </div>
+
+        <!-- 確認モーダルを出す -->
+        <input type="hidden" name="mode" id="recipient-mode" value="">
+        <button type="button" id="open-confirm-modal">登録</button>
+    </form>
+
+    <br>
+    <p>※登録した社員番号は更新できません。 変更したい場合は再登録してください。</p>
+    <br>
+
+    {# 送信先テーブル #}
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table border="1" class="recipients_table styled-table">
+                <thead>
+                    <tr>
+                        <th class="sortable">社員番号</th>
+                        <th class="sortable">部署</th>
+                        <th class="sortable">社員名</th>
+                        <th class="sortable">アドレス</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td>{{ row.employee_no }}</td>
+                        <td>{{ row.department }}</td>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.email }}</td>
+                        <td>
+                            <button type="button" class="load-button">編集</button>
+                            <form class="delete-recipient-form inline-form" method="POST" action="{{ url_for('master.recipient_master') }}">
+                                <input type="hidden" name="mode" value="delete">
+                                <input type="hidden" name="employee_no" value="{{ row.employee_no }}">
+                                <button type="button" class="delete-button">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- 登録確認モーダル -->
+    <div id="insert-modal" class="modal" style="display:none;">
+        <div class="modal-content confirm-modal-content">
+            <h3>【登録】確認</h3>
+            <p>入力した内容で登録しますか？</p>
+            <button id="confirm-button" type="button" onclick="submitForm()">登録</button>
+            <button type="button" onclick="closeModal('insert-modal')">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- 更新確認モーダル -->
+    <div id="update-modal" class="modal" style="display:none;">
+        <div class="modal-content confirm-modal-content">
+            <h3>【更新】確認</h3>
+            <p>入力した社員番号に対して更新しますか？</p>
+            <button id="confirm-button" type="button" onclick="submitForm()">更新</button>
+            <button type="button" onclick="closeModal('update-modal')">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- 削除確認モーダル -->
+    <div id="delete-modal" class="modal" style="display:none;">
+        <div class="modal-content confirm-modal-content">
+            <h3>【削除】確認</h3>
+            <p>※注意：送信済みメールの<br>「送信者数・クリック率・報告率」<br>に影響を及ぼす場合があります。</p>
+            <p>選択した送信先を削除しますか？</p>
+            <button type="button" onclick="submitDeleteForm()">削除</button>
+            <button type="button" onclick="closeModal('delete-modal')">キャンセル</button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        // モーダルウィンドウ表示(基)
+        function openModal(id) {
+            document.getElementById(id).style.display = "flex";
+        }
+        // モーダルウィンドウクローズ(基)
+        function closeModal(id) {
+            document.getElementById(id).style.display = "none";
+        }
+        
+        // 登録・更新フォーム送信
+        function submitForm() {
+            const confirmButton = document.getElementById("confirm-button");
+            confirmButton.disabled = true; // 二重送信を防ぐためにボタンを無効化
+            document.getElementById("send-recipient-form").submit();
+        }
+
+        // 登録ボタン押下
+        document.getElementById("open-confirm-modal").addEventListener("click", function() {
+            // フォーム情報取得
+            const form = document.getElementById("send-recipient-form");
+            // モード指定変数
+            const modeInput = document.getElementById("recipient-mode");
+            
+            // 標準のHTMLバリデーションチェック
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // フォームの入力値を取得
+            const inputEmployeeNo = form.querySelector("input[name='employee_no']").value.trim();
+            const inputName = form.querySelector("input[name='name']").value.trim();
+            const inputEmail = form.querySelector("input[name='email']").value.trim();
+
+            // テーブルのデータを全て取得
+            const tableRows = document.querySelectorAll(".recipients_table tbody tr");
+
+            // 重複チェックフラグ
+            let employeeNoExists = false;
+            let nameEmailExists = false;
+
+            // ループで入力チェック
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+                const empNo = cells[0].textContent.trim();  // 社員番号
+                const name = cells[2].textContent.trim();   // 社員名
+                const email = cells[3].textContent.trim();  // メールアドレス
+
+                if (empNo == inputEmployeeNo) {
+                    employeeNoExists = true;    // 登録済み
+                } else {
+                    // 社員番号が異なり、他人の情報と社員名・アドレスが被っている場合はエラー
+                    if (name == inputName || email == inputEmail) {
+                        nameEmailExists = true;     // 社員名orアドレスが重複
+                    }
+                }
+            });
+
+            // 同名・同アドレスが登録済み → エラー
+            if (nameEmailExists) {
+                alert("同じ社員名・アドレスのデータが既に存在します。");
+                return;
+            }
+
+            if (employeeNoExists) {
+                modeInput.value = "update";
+                openModal("update-modal");  // 更新用モーダル
+            } else {
+                modeInput.value = "insert";
+                openModal("insert-modal");  // 新規登録用モーダル
+            }
+        });
+
+        // 編集ボタン押下で入力項目に送信先の情報を表示
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".load-button").forEach(function(button) {
+                button.addEventListener("click", function () {
+                    const row = button.closest("tr"); // 押したボタンの行
+                    const cells = row.querySelectorAll("td"); // HTMLエスケープと異なり、tdから直接取得
+
+                    const employeeNo = cells[0].textContent.trim();
+                    const department = cells[1].textContent.trim();
+                    const name = cells[2].textContent.trim();
+                    const email = cells[3].textContent.trim();
+
+                    const form = document.getElementById("send-recipient-form");
+                    form.querySelector("input[name='employee_no']").value = employeeNo;
+                    form.querySelector("input[name='department']").value = department;
+                    form.querySelector("input[name='name']").value = name;
+                    form.querySelector("input[name='email']").value = email;
+                });
+            });
+        });
+
+        // 削除ボタン押下でモーダル表示＆社員番号セット
+        // 行からでは、複数行に複数フォームが存在するため、
+        // 対象フォームを変数に保存し、モーダルでフォームを送信する
+        let currentDeleteForm = null;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".delete-button").forEach(function(button) {
+                button.addEventListener("click", function () {
+                    currentDeleteForm = button.closest("form");
+                    openModal("delete-modal");
+                });
+            });
+        });
+
+        // 削除フォーム送信
+        function submitDeleteForm() {
+            if (currentDeleteForm) {
+                currentDeleteForm.submit();
+            }
+        }
+
+    </script>
+{% endblock %}

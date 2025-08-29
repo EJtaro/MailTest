@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}My Flask App{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+  <style>
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    {% block header %}{% endblock %}
+  </header>
+
+  <section class="main-layout">
+    <nav class="sidebar">
+      <h3>メニュー</h3>
+      <a href="{{ url_for('email.send_email') }}" class="sidebar-link" >メール送信画面</a>
+      <br><br>
+      <a href="{{ url_for('master.recipient_master') }}" class="sidebar-link" >送信先管理画面</a>
+      <br><br>
+      <a href="{{ url_for('master.mail_master') }}" class="sidebar-link" >送信履歴画面</a>
+      <br><br>
+      <a href="{{ url_for('master.user_master') }}" class="sidebar-link" >ユーザー管理画面</a>
+      <br><br>
+      <form action="{{ url_for('auth.logout') }}" method="POST">
+        <button type="submit" class="link-button">ログアウト</button>
+      </form>
+    </nav>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </section>
+
+  <footer>
+  </footer>
+  {% block scripts %}
+    <script>
+      /* 汎用ソート処理 */
+      document.addEventListener("DOMContentLoaded", function () {
+          const tables = document.querySelectorAll("table.styled-table");
+
+          tables.forEach((table) => {
+              const headers = table.querySelectorAll("th.sortable");
+
+              headers.forEach((header, columnIndex) => {
+                  header.addEventListener("click", () => {
+                      const tbody = table.querySelector("tbody");
+                      const rows = Array.from(tbody.querySelectorAll("tr"));
+                      const ascending = header.classList.toggle("asc");
+
+                      // 他のヘッダーのascクラスは削除
+                      headers.forEach(h => { if (h !== header) h.classList.remove("asc"); });
+
+                      rows.sort((a, b) => {
+                          const cellA = a.children[columnIndex].textContent.trim();
+                          const cellB = b.children[columnIndex].textContent.trim();
+                          const result = cellA.localeCompare(cellB, 'ja');
+                          return ascending ? result : -result;
+                      });
+
+                      rows.forEach(row => tbody.appendChild(row));
+                  });
+              });
+          });
+      });
+    </script>
+  {% endblock %}
+</body>
+</html>

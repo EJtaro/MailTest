@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}メール送信{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/send_email.css') }}">
+{% endblock %}
+
+{% block header %}
+    <div class="header-line">
+        <h3>メール送信画面</h3>
+        <p>ログイン中のユーザー: {{ user }}</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form id="send-email-form" method="POST" action="{{ url_for('email.send_email') }}">
+        <h3>送信先一覧</h3>
+        <div class="table-container">
+            <div class="table-controls">
+                <button type="button" onclick="checkAll(true)">一括選択</button>
+                <button type="button" onclick="checkAll(false)">一括解除</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table border="1" class="recipients_table styled-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable"></th>
+                            <th class="sortable">部署</th>
+                            <th class="sortable">社員名</th>
+                            <th class="sortable">メールアドレス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td onclick="toggleCheckbox(this)"><input type="checkbox" class="row_checkbox" name="selected_rows" value="{{ row.email }}"/></td>
+                            <td>{{ row.department }}</td>
+                            <td>{{ row.name }}</td>
+                            <td>{{ row.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <br>
+
+        <h3>送信メール内容</h3>
+
+        {% if message %}
+            <p style="color:red;">{{ message }}</p>
+        {% endif %}
+
+        <label>※リンクを挿入するには、[[LINK:○○○]] と記入してください。</label><br>
+        <label>記入例：詳しくは[[LINK:こちら]]からご確認ください。</label><br>
+        <label>※○○○の部分が未入力の場合は、短縮したURLが表示されます。</label><br>
+        <label>記入例：詳しくはこちら → [[LINK:]]</label>
+    
+        <div class="email-form">
+            <div class="history-mail">
+                <button type="button" id="open-history-modal">メール読込</button>
+            </div>
+
+            {# 表示される差出人アドレス #}
+            <div class="form-row">
+                <label>差出人名:</label>
+                <input type="text" name="header_from_name" value="{{ initial_value.from_name | e }}"><br><br>
+            </div>
+
+            <div class="form-row">
+                <label>ヘッダFrom:</label>
+                <input type="email" name="header_from_email" value="{{ initial_value.from_email | e }}" required><br><br>
+            </div>
+
+            <div class="form-row">
+                <label>件名:</label>
+                <input type="text" name="subject" value="{{ initial_value.subject | e }}"  required><br><br>
+            </div>
+            
+            <div class="form-row">
+                <label>本文:</label>
+                <br>
+                <textarea name="body_text" rows="18" style="width: 80%;" required>{{ initial_value.body_text | e }}</textarea>
+            </div>
+        </div>
+
+
+        <!-- 実際の送信ではなく、確認モーダルを出す -->
+        <button type="button" id="open-confirm-modal">送信</button>
+    </form>
+
+    <!-- メール履歴モーダル -->
+    <div id="history-modal" class="modal" style="display:none;">
+        <div class="modal-content history-modal-content">
+            <span class="close">&times;</span>
+            <h3>送信履歴一覧</h3>
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table border="1" class="history_table styled-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable">送信日</th>
+                                <th class="sortable">送信ユーザー</th>
+                                <th class="sortable">From</th>
+                                <th class="sortable">件名</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mail in mail_history %}
+                            <!-- 行データをHTMLエスケープしてjavascriptで読めるよう設定 -->
+                            <tr
+                                data-from_address="{{ mail.from_address | e }}"
+                                data-subject="{{ mail.subject | e }}" 
+                                data-body="{{ mail.body | e }}" 
+                            >
+                                <td>{{ mail.sent_at | jst_format_jp }}</td>
+                                <td>{{ mail.user_id }}</td>
+                                <td>{{ mail.from_address }}</td>
+                                <td>{{ mail.subject }}</td>
+                                <td>
+                                    <button type="button" class="load-button">読込</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 送信確認モーダル -->
+    <div id="confirm-modal" class="modal" style="display:none;">
+        <div class="modal-content confirm-modal-content">
+            <h3>確認</h3>
+            <p>メールを送信しますか？</p>
+            <button id="confirm-send-button" type="button" onclick="submitForm()">送信</button>
+            <button id="confirm-cancel-button" type="button" onclick="closeModal('confirm-modal')">キャンセル</button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        // チェック切替
+        function toggleCheckbox(td) {
+            // checkbox自身をクリックした時は処理しない（トグルが二重になるのを防ぐため）
+            if (event.target.type === 'checkbox') return;
+
+            const checkbox = td.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+        // チェック一括切替
+        function checkAll(checked) {
+            const checkboxes = document.querySelectorAll(".row_checkbox");
+            checkboxes.forEach(cb => cb.checked = checked);
+        }
+
+        // モーダルウィンドウ表示(基)
+        function openModal(id) {
+            document.getElementById(id).style.display = "flex";
+        }
+        // モーダルウィンドウクローズ(基)
+        function closeModal(id) {
+            document.getElementById(id).style.display = "none";
+        }
+
+        // 確認モーダル表示ボタン(入力チェック有り)
+        document.getElementById("open-confirm-modal").addEventListener("click", function() {
+            const form = document.getElementById("send-email-form");
+            const bodyField = form.querySelector("textarea[name='body_text']");
+            const body = bodyField.value;
+            const linkPattern = /\[\[LINK:[^\]]*\]\]/g;
+
+            // チェックボックスが1つ以上選ばれているか確認
+            const checkboxes = form.querySelectorAll("input[name='selected_rows']:checked");
+            if (checkboxes.length === 0) {
+                alert("送信先が選択されていません。少なくとも1人選択してください。");
+                return;
+            }
+
+            // 独自エラーをリセット
+            bodyField.setCustomValidity("");
+            
+            // 標準のHTMLバリデーションチェック
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // 独自チェック：[[LINK:任意文字列]] の存在を検出
+            if (!linkPattern.test(body)) {
+                // 独自エラーをセット
+                bodyField.setCustomValidity("本文に [[LINK:]] の形式を1つ以上含めてください。\n 任意入力箇所に '[' や ']' は使用できません。");
+                bodyField.reportValidity();  // フォーカス＆UI警告を出す
+                return
+            }
+
+            openModal("confirm-modal");
+        });
+        
+        // メール履歴モーダル表示
+        document.getElementById("open-history-modal").addEventListener("click", function() {
+            openModal("history-modal");
+        });
+        // メール履歴モーダルクローズ
+        document.querySelector(".close").addEventListener("click", function() {
+            closeModal("history-modal");
+        });
+
+        // 「読込」ボタンが押されたときに対象データをフォームに反映
+        document.querySelectorAll(".load-button").forEach(button => {
+            button.addEventListener("click", function () {
+                const row = this.closest("tr");
+                
+                const from = row.dataset.from_address
+                const subject = row.dataset.subject;
+                const body = row.dataset.body;
+
+                // from_address を分割する処理
+                let name = "";
+                let email = "";
+
+                const match = from.match(/^(.*)?\s*<([^>]+)>$/);
+                if (match) {
+                    name = match[1]?.trim() || "";  // 名前が存在すればトリム、なければ空文字
+                    email = match[2];               // メールアドレス
+                } else {
+                    // 例: from が "example@example.com" のように <> を含まない場合
+                    email = from.trim();
+                }
+
+                // 対象のフォームに反映
+                document.querySelector("input[name='header_from_name']").value = name;
+                document.querySelector("input[name='header_from_email']").value = email;
+                document.querySelector("input[name='subject']").value = subject;
+                document.querySelector("textarea[name='body_text']").value = body;
+
+                // モーダルを閉じる
+                document.getElementById("history-modal").style.display = "none";
+            });
+        });
+
+        // 「はい、送信」ボタンでフォーム送信
+        function submitForm() {
+            const sendButton = document.getElementById("confirm-send-button");
+            const cancelButton = document.getElementById("confirm-cancel-button");
+            sendButton.disabled = true; // 二重送信を防ぐためにボタンを無効化
+            cancelButton.disabled = true;
+            document.getElementById("send-email-form").submit();
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,45 @@
+/* 送信先テーブル */
+.recipients_table td:last-child,
+.recipients_table th:last-child {  /* 最後の列だけ幅調整 */
+  width: 160px;        /* 必要に応じて調整 */
+  min-width: 160px;
+  max-width: 160px;
+  text-align: center; /* ボタンの中央寄せ */
+}
+
+/* 送信先入力フォーム */
+.recipient-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #fff;
+  padding: 2rem 3rem;
+  border-radius: 8px;
+  /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);*/
+}
+.recipient-form label {
+  width: 120px; /* ラベルの幅を固定 */
+  display: inline-block;
+  text-align: left;
+}
+.recipient-form input {
+  padding: 0.4rem;
+  font-size: 1rem;
+  width: 400px;
+}
+.recipient-form div {
+  align-items: center;
+}
+
+/* ボタン横並び */
+.inline-form {
+  display: inline-block;
+  margin-left: 8px; /* ボタン間に余白 */
+}
+
+.load-button,
+.delete-button {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 14px;
+}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}送信履歴{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mail_master.css') }}"> 
+{% endblock %}
+
+{% block header %}
+    <div class="header-line">
+        <h3>送信履歴画面</h3>
+        <p>ログイン中のユーザー: {{ user }}</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h3>送信履歴一覧</h3>
+
+    <label>※クリック率・・・クリック者数 ÷ 送信先数</label>
+    <br>
+    <label>※報告率・・・報告者数 ÷ クリック者数</label>
+
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table border="1" class="history_table styled-table">
+                <thead>
+                    <tr>
+                        <th class="sortable">送信日</th>
+                        <th class="sortable">送信ユーザー</th>
+                        <th class="sortable">From</th>
+                        <th class="sortable">件名</th>
+                        <th class="sortable">送信先数</th>
+                        <th class="sortable">クリック率</th>
+                        <th class="sortable">報告率</th>
+                        <th class="sortable">送信状態</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mail in mail_history %}
+                    <!-- 行データをHTMLエスケープしてjavascriptで読めるよう設定 -->
+                    <tr
+                        data-from_address="{{ mail.from_address | e }}"
+                        data-subject="{{ mail.subject | e }}" 
+                        data-body="{{ mail.body | e }}" 
+                        data-mail_id="{{ mail.mail_id }}"
+                    >
+                        <td>{{ mail.sent_at | jst_format_jp }}</td>
+                        <td>{{ mail.user_id }}</td>
+                        <td>{{ mail.from_address }}</td>
+                        <td>{{ mail.subject }}</td>
+                        <td class="align-right">{{ mail.to_counts }}</td>
+                        <td class="align-right">{{ (mail.click_rate * 100) | round(1) }}%</td>
+                        <td class="align-right" id="report-rate-{{ mail.mail_id }}">{{ (mail.report_rate * 100) | round(1) }}%</td>
+                        <td class="align-center">{{ "成功" if mail.state == "success" else "失敗" }}</td>
+                        <td>
+                            <button type="button" class="load-button">読込</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if message %}
+        <p style="color:red;">{{ message }}</p>
+    {% endif %}
+    <br>
+    {# メール内容 #}
+    <div class="email-form">
+        <h3>送信内容</h3>
+        <div class="form-row">
+            <label>From:</label>
+            <input type="text" name="from" value="" readonly><br><br>
+        </div>
+
+        <div class="form-row">
+            <label>件名:</label>
+            <input type="text" name="subject" value=""  readonly><br><br>
+        </div>
+        
+        <div class="form-row">
+            <label>本文:</label>
+            <br>
+            <textarea name="body_text" rows="18" style="width: 80%;" readonly></textarea>
+        </div>
+    </div>
+
+    <h3>メール送信先一覧</h3>    
+    <label>※URLをクリックした人の中で、報告した人はチェックを入れてください。</label>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table border="1" class="dlivered_table styled-table">
+                <thead>
+                    <tr>
+                        <th class="sortable">部署</th>
+                        <th class="sortable">社員名</th>
+                        <th class="sortable">アドレス</th>
+                        <th class="sortable">送信状態</th>
+                        <th class="sortable">クリック日時</th>
+                        <th class="sortable">報告</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in delivered_list %}
+                    <!-- 行データをHTMLエスケープしてjavascriptで読めるよう設定 -->
+                    <tr class="{{ 'unsent-row' if row.state != 'success' }}">
+                        <td>{{ row.recipients.department }}</td>
+                        <td>{{ row.recipients.name }}</td>
+                        <td>{{ row.recipients.email }}</td>
+                        <td>{{ "成功" if row.state == "success" else "失敗" }}</td>
+                        <td>{{ row.clicked_at if row.clicked_at else "-" }}</td>
+                        <td>
+                            {% if row.clicked %}
+                                <input type="checkbox"
+                                class="report-checkbox"
+                                name="selected_rows"
+                                value="{{ row.recipient_id }}"
+                                data-recipient_id="{{ row.recipient_id }}"
+                                data-mail_id="{{ row.mail_id }}"
+                                {% if row.reported %} checked {% endif %}>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        // 「読込」ボタンが押されたときに対象データをフォームに反映
+        document.querySelectorAll(".load-button").forEach(button => {
+            button.addEventListener("click",async function () {
+                const row = this.closest("tr");
+
+                const from = row.dataset.from_address
+                const subject = row.dataset.subject;
+                const body = row.dataset.body;
+                const mail_id = row.dataset.mail_id;
+
+                // 対象のフォームに反映
+                document.querySelector("input[name='from']").value = from;
+                document.querySelector("input[name='subject']").value = subject;
+                document.querySelector("textarea[name='body_text']").value = body;
+
+                // Flaskにdelivered_listを取得させる（画面遷移なし）
+                try {
+                    // テンプレートリテラル（バッククォート）を使って変数を展開
+                    const response = await fetch(`/mail_master/delivered_list?mail_id=${mail_id}`);
+                    const deliveredList = await response.json();
+
+                    if (response.ok) {
+                        renderDeliveredTable(deliveredList);  // テーブルを描画する関数
+                    } else {
+                        alert("送信先一覧の取得に失敗しました");
+                        console.error(deliveredList.error);
+                    }
+                } catch (err) {
+                    console.error("Fetch error:", err);
+                    alert("通信エラーが発生しました");
+                }
+            });
+        });
+
+        // 取得したデータでテーブルを書き換える
+        function renderDeliveredTable(data) {
+            const tbody = document.querySelector(".dlivered_table tbody");
+            tbody.innerHTML = "";  // 既存行をクリア
+
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.className = row.state !== "success" ? "unsent-row" : "";
+                tr.dataset.mail_id = row.mail_id;
+
+                // 行を作成
+                tr.innerHTML = `
+                    <td>${row.recipients?.department || "-"}</td>
+                    <td>${row.recipients?.name || "-"}</td>
+                    <td>${row.recipients?.email || "-"}</td>
+                    <td>${row.state === "success" ? "成功" : "失敗"}</td>
+                    <td>${row.clicked_at ? jst_format_jp(row.clicked_at) : "-"}</td>
+                    <td>${row.clicked ? `
+                        <input type="checkbox"
+                            class="report-checkbox"
+                            name="selected_rows"
+                            value="${row.recipient_id}"
+                            data-recipient_id="${row.recipient_id}"
+                            data-mail_id="${row.mail_id}"
+                            ${row.reported ? "checked" : ""}>
+                        ` : "-"}</td>
+                `;
+                tbody.appendChild(tr); // 行を追加
+            });
+        }
+
+        // チェックボックス変更時に報告状態を更新
+        // AJAX更新後は新規追加されたチェックボックスにイベントが付かない
+        // イベント委譲でtbodyにクリックイベントをセット
+        document.querySelector(".dlivered_table tbody").addEventListener("change", async (event) => {
+            const target = event.target;
+            if (target.classList.contains("report-checkbox")) {
+                const recipient_id = target.dataset.recipient_id;
+                const mail_id = target.dataset.mail_id;
+                const checked = target.checked;
+
+                try {
+                    const res = await fetch("/mail_master/report", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            recipient_id: recipient_id,
+                            mail_id: mail_id,
+                            checked: checked
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const rateCell = document.querySelector(`#report-rate-${mail_id}`);
+                        if (rateCell) {
+                            rateCell.textContent = `${data.report_rate.toFixed(1)}%`;
+                        }
+                    } else {
+                        alert("報告状態の更新に失敗しました。");
+                        target.checked = !checked; // 元に戻す
+                    }
+                } catch (error) {
+                    console.error("報告更新エラー:", error);
+                    target.checked = !checked;
+                }
+            }
+        });
+
+        // UTCの日付文字列 → JSTに変換して日本語フォーマットで返す
+        // Flaskに記載した処理がここでは使えないので作成
+        function jst_format_jp(utcStr) {
+            if (!utcStr) return "-";
+            
+            try {
+                const jst = new Date(utcStr); // ローカルタイム(jst)に変換
+                console.log("ローカル時刻：", jst)
+
+                // フォーマット: "YYYY年M月D日H時M分S秒"
+                const Y = jst.getFullYear();
+                const M = jst.getMonth() + 1;
+                const D = jst.getDate();
+                const h = jst.getHours();
+                const m = jst.getMinutes();
+                const s = jst.getSeconds();
+
+                return `${Y}年${M}月${D}日${h}時${m}分${s}秒`;
+            } catch (e) {
+                console.error("日付変換失敗:", e);
+                return "-";
+            }
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style_nosidebar.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    {% block header %}{% endblock %}
+  </header>
+  <!-- サイドバーなし -->
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+  </footer>
+  {% block scripts %}
+    <script>
+      /* ブラウザの「戻る」ボタンなどで戻った場合、入力内容をクリア */
+      window.addEventListener("pageshow", function(event) {
+        if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
+          document.querySelectorAll("input:not([type='hidden'])").forEach(input => input.value = "");
+        }
+      });
+    </script>
+  {% endblock %}
+</body>
+</html>

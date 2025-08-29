@@ -1,0 +1,67 @@
+/* 送信履歴テーブル */
+.history_table {
+  width: 100%;
+  min-width: 700px;  /* ここで必要な幅を指定 */
+}
+/* 各列の幅を指定（列順：送信日、送信ユーザー、From、件名、送信数） */
+.history_table th:nth-child(1),
+.history_table td:nth-child(1) {
+  width: 160px;  /* 送信日 */
+}
+.history_table th:nth-child(2),
+.history_table td:nth-child(2) {
+  width: 170px;  /* ユーザー名 */
+}
+.history_table th:nth-child(3),
+.history_table td:nth-child(3) {
+  width: 220px;  /* From（名前＋メール） */
+}
+.history_table th:nth-child(4),
+.history_table td:nth-child(4) {
+  width: 240px;  /* 件名（長め） */
+}
+.history_table th:nth-child(5),
+.history_table td:nth-child(5) {
+  width: 80px;   /* 送信数 */
+}
+.history_table th:nth-child(6),
+.history_table td:nth-child(6) {
+  width: 80px;   /* クリック率 */
+}
+.history_table th:nth-child(7),
+.history_table td:nth-child(7) {
+  width: 80px;   /* 報告率 */
+}
+.history_table th:nth-child(8),
+.history_table td:nth-child(8) {
+  width: 80px;   /* 送信状態 */
+}
+.history_table td:last-child,
+.history_table th:last-child {
+  width: 80px;        /* 必要に応じて調整 */
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center; /* ボタンの中央寄せ */
+}
+
+/* 送信履歴テーブル */
+.dlivered_table {
+  width: 100%;
+  min-width: 950px;  /* 最小幅を指定 */
+}
+.dlivered_table td:last-child,
+.dlivered_table th:last-child {
+  text-align: center;
+  vertical-align: middle; /* ボタンの中央寄せ */
+}
+
+.email-form label {
+  width: 120px; /* ラベルの幅を固定 */
+  display: inline-block;
+  text-align: left;
+}
+.email-form input {
+  padding: 0.4rem;
+  font-size: 1rem;
+  width: 400px;
+}

@@ -1,0 +1,15 @@
+{% extends "base_nosidebar.html" %}
+
+{% block title %}エラー{% endblock %}
+
+{% block header %}
+    <h3>エラー</h3>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ message }}</h1>
+    <form action="{{ url_for('auth.login') }}" method="POST">
+      <input type="hidden" name="restart" value="error">
+      <button type="submit">ログイン画面</button>
+    </form>
+{% endblock %}

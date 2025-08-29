@@ -1,0 +1,20 @@
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: auto; /* スクロールを許可 */
+      background-color: #000; /* 背景色(余白)を黒に設定 */
+    }
+
+    .gif-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    img.fullscreen-gif {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
