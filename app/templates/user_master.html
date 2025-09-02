@@ -27,12 +27,12 @@
         <div class="user-data-form">
             <div class="form-row">
                 <label>管理者アドレス:</label>
-                <input type="email" name="user_email" value="{{ user_data.email }}"><br><br>
+                <input type="email" name="user_email" value="{{ user_data.email }}" maxlength="254"><br><br>
             </div>
 
             <div class="form-row">
                 <label>ログインID:</label>
-                <input type="text" name="user_id" value="{{ user_data.user_id }}"><br><br>
+                <input type="text" name="user_id" value="{{ user_data.user_id }}" maxlength="50"><br><br>
             </div>
 
             <div class="form-row">
@@ -53,22 +53,22 @@
         <div class="click-alert-form">
             <div class="form-row">
                 <label>社員番号:</label>
-                <input type="number" name="employee_no" value="" min="0" step="1" required><br><br>
+                <input type="number" name="employee_no" value="" min="0" step="1" maxlength="7" required><br><br>
             </div>
 
             <div class="form-row">
                 <label>部署:</label>
-                <input type="text" name="department" value="" required><br><br>
+                <input type="text" name="department" value="" maxlength="50" required><br><br>
             </div>
 
             <div class="form-row">
                 <label>社員名:</label>
-                <input type="text" name="name" value=""  required><br><br>
+                <input type="text" name="name" value="" maxlength="50" required><br><br>
             </div>
             
             <div class="form-row">
                 <label>アドレス:</label>
-                <input type="email" name="email" value=""  required><br><br>
+                <input type="email" name="email" value="" maxlength="254" required><br><br>
             </div>
         </div>
 

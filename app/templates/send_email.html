@@ -68,17 +68,17 @@
             {# 表示される差出人アドレス #}
             <div class="form-row">
                 <label>差出人名:</label>
-                <input type="text" name="header_from_name" value="{{ initial_value.from_name | e }}"><br><br>
+                <input type="text" name="header_from_name" value="{{ initial_value.from_name | e }}" maxlength="50"><br><br>
             </div>
 
             <div class="form-row">
                 <label>ヘッダFrom:</label>
-                <input type="email" name="header_from_email" value="{{ initial_value.from_email | e }}" required><br><br>
+                <input type="email" name="header_from_email" value="{{ initial_value.from_email | e }}" maxlength="254" required><br><br>
             </div>
 
             <div class="form-row">
                 <label>件名:</label>
-                <input type="text" name="subject" value="{{ initial_value.subject | e }}"  required><br><br>
+                <input type="text" name="subject" value="{{ initial_value.subject | e }}"  maxlength="50" required><br><br>
             </div>
             
             <div class="form-row">
@@ -87,8 +87,6 @@
                 <textarea name="body_text" rows="18" style="width: 80%;" required>{{ initial_value.body_text | e }}</textarea>
             </div>
         </div>
-
-
         <!-- 実際の送信ではなく、確認モーダルを出す -->
         <button type="button" id="open-confirm-modal">送信</button>
     </form>
