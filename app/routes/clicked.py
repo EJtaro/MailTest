@@ -6,7 +6,7 @@ from app.services.db import (
 )
 from app.services.mail import MailClient
 from app.services.log import log_error
-from app.services.utils import get_time_now, jst_format_jp
+from app.services.utils import is_valid_uuid,get_time_now, jst_format_jp
 
 bp = Blueprint("clicked", __name__)
 
@@ -21,20 +21,19 @@ def url_clicked():
     print(f"送信先ID：{ recipient_id }")
     print(f"現在時刻：{ formatted_time }")
 
-    if not mail_id or not recipient_id:
-        # クエリパラメータが未設定
-        print("パラメータ値が未設定")
+    if not mail_id or not recipient_id or not is_valid_uuid(mail_id) or not is_valid_uuid(recipient_id):
+        print("パラメータ値が無効または未設定")
         return render_template("url_clicked.html")
     
     # mail_id、recipient_idを条件にemail_deliveredから探す
     try:
         result = get_email_delivered_by_mail_id_and_recipient_id(mail_id, recipient_id)
-        print(result)
+        print(f"取得結果：{ result }")
+        print(f"recipientsの中身: {result.get('recipients')}")
 
         if not result or not result.get("recipients"):
-            # 未登録のクエリパラメータ
             print("パラメータ値が未登録")
-            return render_template("url_clicked.html ")
+            return render_template("url_clicked.html")
 
         clicked = result.get("clicked")
 

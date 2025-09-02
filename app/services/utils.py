@@ -5,12 +5,20 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import secrets
 import string
+import uuid
 
 
 # 大文字小文字の英数字か入力チェックを行う
 # ログインフォームでのみ利用
 def is_valid_login_id(login_id: str) -> bool:
     return re.match(r'^[a-zA-Z0-9_]+$', login_id) is not None
+
+def is_valid_uuid(value):
+    try:
+        uuid.UUID(value)
+        return True
+    except (ValueError, AttributeError, TypeError):
+        return False
 
 # パスワード自動生成
 def generate_password(length=12):

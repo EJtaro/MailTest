@@ -133,13 +133,11 @@ def get_email_delivered_by_mail_id(mail_id):
 
 # メール送信先をメールIDから取得(論理削除も込み)
 def get_email_delivered_by_mail_id_and_recipient_id(mail_id, recipient_id):
-    result = supabase.table(constants.EMAIL_DELIVERED).select("""
-        *,
-        recipients!inner (
-            name
-        )
-    """).eq("mail_id", mail_id).eq("recipient_id", recipient_id).execute()
-
+    result = supabase.table(constants.EMAIL_DELIVERED).select(
+        "delivered_id, mail_id, recipient_id, clicked, reported, state, "
+        "recipients(name)"
+    ).eq("mail_id", mail_id).eq("recipient_id", recipient_id).execute()
+    print(f"結果:{result}")
     if not result.data:
         return None
 
