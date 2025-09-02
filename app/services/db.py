@@ -139,7 +139,11 @@ def get_email_delivered_by_mail_id_and_recipient_id(mail_id, recipient_id):
             name
         )
     """).eq("mail_id", mail_id).eq("recipient_id", recipient_id).execute()
-    return result.data[0] or []
+
+    if not result.data:
+        return None
+
+    return result.data[0]
 
 # メール送信先に登録
 def insert_email_delivered(recipient_id, mail_id):

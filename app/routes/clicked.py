@@ -29,8 +29,9 @@ def url_clicked():
     # mail_id、recipient_idを条件にemail_deliveredから探す
     try:
         result = get_email_delivered_by_mail_id_and_recipient_id(mail_id, recipient_id)
-        
-        if not result:
+        print(result)
+
+        if not result or not result.get("recipients"):
             # 未登録のクエリパラメータ
             print("パラメータ値が未登録")
             return render_template("url_clicked.html ")
