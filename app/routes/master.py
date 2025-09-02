@@ -102,20 +102,8 @@ def mail_master():
         log_error("送信履歴・メール送信先取得失敗", e)
         return redirect(url_for("email.send_email"))
 
+    # 初期表示では空の送信先リストを渡す
     delivered_list = []
-
-    # mail_idからメール送信先を取得
-    try:
-        if mail_id:
-            print(mail_id)
-            delivered_list = get_email_delivered_by_mail_id(mail_id)    # メール送信先取得
-            print(delivered_list)
-    except Exception as e:
-        session["message"] = f"メール送信先取得失敗: {str(e)}"
-        log_error("メール送信先取得失敗", e)
-        return redirect(url_for("email.send_email"))
-
-    #message = "テスト"
     return render_template("mail_master.html", user=user_id, message=message, mail_history=sent_emails, delivered_list=delivered_list)
 
 # メール送信先を返すAPI
@@ -128,9 +116,9 @@ def api_delivered_list():
 
     try:
         delivered_list = get_email_delivered_by_mail_id(mail_id)
-        print(delivered_list)
         return jsonify(delivered_list)
     except Exception as e:
+        log_error("メール送信先取得失敗", e)
         return jsonify({"error": str(e)}), 500
 
 # 報告チェックボックスクリックにあわせてDB反映
