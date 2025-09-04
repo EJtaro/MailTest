@@ -10,10 +10,9 @@ from app.services.db import (
     send_email_transaction,
     send_email_success
 )
-#from app.services.utils import get_time_now
-#from app.services.mail import send_email_message
 from app.services.mail import MailClient
 from app.services.log import log_error
+from app import constants
 import os
 import re
 
@@ -44,8 +43,6 @@ def send_email():
         subject = request.form["subject"]
         body_text = request.form["body_text"] or ""
         selected_emails = request.form.getlist("selected_rows")
-        print(selected_emails)
-
         print("今回の送信先メール:" + ",".join(selected_emails))
 
         # プロシージャ利用
@@ -53,7 +50,7 @@ def send_email():
             mail_id = send_email_transaction(user_id, from_address_display, subject, body_text, selected_emails)
 
         except Exception as e:
-            session["message"] = f"トランザクション失敗: {str(e)}"
+            session["message"] = f"訓練メールの送信に失敗しました。" + constants.UTIL_MESSAGE
             return redirect(url_for("email.send_email"))
 
         send_succeed = []
@@ -95,7 +92,7 @@ def send_email():
                     send_succeed.remove(email_addr)
                     send_failed.append(email_addr)
         except Exception as e:
-            session["message"] = f"送信結果の取得に失敗しました。: {str(e)}"
+            session["message"] = f"送信結果の取得に失敗しました。hetemailにログインし、送信結果を確認してください。"
             log_error("送信結果の取得に失敗", e)
             return redirect(url_for("email.send_email"))
 
@@ -112,7 +109,7 @@ def send_email():
                 update_email_delivered_by_email(mail_id,send_succeed)
 
             except Exception as e:
-                session["message"] = f"送信結果の更新に失敗しました。: {str(e)}"
+                session["message"] = f"送信結果の更新に失敗しました。hetemailにログインし、送信結果を確認してください。"
                 log_error("送信結果のDB更新に失敗", e)
                 return redirect(url_for("email.send_email"))
 
@@ -127,7 +124,7 @@ def send_email():
                 print("全員成功")
             
             except Exception as e:
-                session["message"] = f"送信に成功したがDB更新に失敗: {str(e)}"
+                session["message"] = f"メールの送信に成功しましたが、データベースの更新に失敗しました。システム管理者に問い合わせください。"
                 log_error("送信に成功したがDB更新に失敗", e)
                 return redirect(url_for("email.send_email"))
 
