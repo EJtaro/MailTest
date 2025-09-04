@@ -55,7 +55,7 @@
             <p style="color:red;">{{ message }}</p>
         {% endif %}
 
-        <label>※リンクを挿入するには、[[LINK:○○○]] と記入してください。</label><br>
+        <label>※リンクを挿入するには、[[LINK:○○○]] と記入してください。任意入力箇所に '[' や ']' は使用できません。</label><br>
         <label>記入例：詳しくは[[LINK:こちら]]からご確認ください。</label><br>
         <label>※○○○の部分が未入力の場合は、短縮したURLが表示されます。</label><br>
         <label>記入例：詳しくはこちら → [[LINK:]]</label>
@@ -198,7 +198,7 @@
             // 独自チェック：[[LINK:任意文字列]] の存在を検出
             if (!linkPattern.test(body)) {
                 // 独自エラーをセット
-                bodyField.setCustomValidity("本文に [[LINK:]] の形式を1つ以上含めてください。\n 任意入力箇所に '[' や ']' は使用できません。");
+                bodyField.setCustomValidity("本文に [[LINK:]] の形式を1つ以上含めてください。");
                 bodyField.reportValidity();  // フォーカス＆UI警告を出す
                 return
             }
