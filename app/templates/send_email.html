@@ -198,7 +198,7 @@
             // 独自チェック：[[LINK:任意文字列]] の存在を検出
             if (!linkPattern.test(body)) {
                 // 独自エラーをセット
-                bodyField.setCustomValidity("本文に [[LINK:]] の形式を1つ以上含めてください。");
+                bodyField.setCustomValidity("本文に [[LINK:]] の形式を1つ以上含めてください。\n 任意入力箇所に '[' や ']' は使用できません。");
                 bodyField.reportValidity();  // フォーカス＆UI警告を出す
                 return
             }
