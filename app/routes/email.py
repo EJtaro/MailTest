@@ -22,9 +22,6 @@ bp = Blueprint("email", __name__)
 # メール送信画面
 @bp.route("/send_email", methods=["GET", "POST"])
 def send_email():
-    if 'user_id' not in session:
-        return redirect(url_for("auth.login"))
-
     user_id = session["user_id"]
     # .popで取り出すと同時にsession情報を削除している
     message = session.pop("message", None)

@@ -4,6 +4,7 @@ from app.services.db import get_user_by_id, get_user_by_email, update_password
 from app.services.mail import MailClient
 from app.services.utils import is_valid_login_id, generate_password
 from app.services.log import log_error
+from app import constants
 
 bp = Blueprint('auth', __name__)
 
@@ -21,10 +22,9 @@ def login():
             return redirect(url_for("email.send_email"))
 
         if request.method == "POST":
-
             # ログインssessionが切れているときのみ動く
             if request.form.get("restart") == "error":
-                # 再び再発行画面を開いたときにエラーメッセージが出ないようにするため
+                # 再び再発行画面を開いたときにエラーメッセージが出ないようにするため.popで除去
                 session.pop("error", None)
                 return redirect(url_for("auth.login"))
             
@@ -37,16 +37,15 @@ def login():
                     return redirect(url_for("email.send_email"))
                 error_message = "登録済みのログインID・パスワードを入力してください。"
             else:
-                error_message = ( 
-                    "ユーザー名が未入力です。" if username == "" else 
-                    "ログインIDには英数字とアンダースコア(_)のみ入力可能です。" if not is_valid_login_id(username) else
+                error_message = (
+                    "ログインIDが未入力です。" if username == "" else 
+                    "ログインIDには大文字小文字の英数字とアンダースコア(_)のみ入力可能です。" if not is_valid_login_id(username) else
                     "パスワードが未入力です。"
                 )
-                #return jsonify(success=False, error="ユーザー名またはパスワードが未入力です。")
 
     except Exception as e:
-        log_error("ログイン処理に失敗に失敗", e)
-        error_message = "システムエラーが発生しました。管理者に連絡してください。"
+        log_error("ログイン処理に失敗", e)
+        error_message = "ログインに失敗しました。" + constants.UTIL_MESSAGE
         return render_template("login.html", error=error_message)
     return  render_template("login.html", error = error_message, username=username, password=password)
 
@@ -68,17 +67,11 @@ def forgot_password():
 
             if result:
                 user_id = result.get("user_id")
-                # パスワードを再生成
+                # パスワードを再生成&ハッシュ化
                 password = generate_password()
-                print(password)
-
-                password = "mail0406"
-                # ハッシュ化
                 password_hash = generate_password_hash(password)
-                print(password_hash)
+
                 # パスワードを登録
-                error = "OK"
-                session["error"] = error
                 update_password(user_id, password_hash)
             else:
                 session["error"] = "未登録のアドレスです。"
@@ -86,7 +79,7 @@ def forgot_password():
 
         except Exception as e:
             log_error("パスワード再発行に失敗", e)
-            session["error"] = "パスワードの再発行中にエラーが発生しました。\n しばらく時間をおいてから、お試しください。"
+            session["error"] = "パスワードの再発行中にエラーが発生しました。" + constants.UTIL_MESSAGE
             return redirect(url_for("auth.forgot_password"))
 
         # メール送信
@@ -100,10 +93,10 @@ def forgot_password():
             )
         except Exception as e:
             log_error("パスワード通知メールの送信に失敗", e)
-            session["error"] = f"{mail_address} への送信に失敗しました。"
+            session["error"] = f"{mail_address} への送信に失敗しました。" + constants.UTIL_MESSAGE
             return redirect(url_for("auth.forgot_password"))
-        
+
+        # 正常に終了した場合のメッセージ
         session["error"] = f"{mail_address} へログインIDと再発行したパスワードを送信しました。"
         return redirect(url_for("auth.forgot_password"))
     return render_template("forgot_password.html", error=error)
-

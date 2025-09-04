@@ -15,6 +15,7 @@ from app.services.db import (
     delete_click_alert_by_employee_no
 )
 from app.services.log import log_error
+from app.services.utils import is_valid_login_id
 from werkzeug.security import generate_password_hash
 
 bp = Blueprint("master", __name__)
@@ -23,8 +24,6 @@ bp = Blueprint("master", __name__)
 # 送信先管理画面
 @bp.route("/recipient_master", methods=["GET", "POST"])
 def recipient_master():
-    if 'user_id' not in session:
-        return redirect(url_for("auth.login"))
     message = session.pop("message", None)
 
     user_id = session["user_id"]
@@ -70,7 +69,7 @@ def recipient_master():
 
         elif mode == "delete":
             # 削除処理
-            # recipientsだけでなくemail_deliveredも削除する必要がある
+            # idがemail_deliveredと紐づいているのでも論理削除とする
             try:
                 delete_recipients_by_employee_no(employee_no)
             except Exception as e:
@@ -88,8 +87,6 @@ def recipient_master():
 # 送信履歴画面
 @bp.route("/mail_master", methods=["GET"])
 def mail_master():
-    if 'user_id' not in session:
-        return redirect(url_for("auth.login"))
     message = session.pop("message", None)
 
     user_id = session["user_id"]
@@ -145,8 +142,6 @@ def update_report():
 # ユーザー管理画面
 @bp.route("/user_master", methods=["GET", "POST"])
 def user_master():
-    if 'user_id' not in session:
-        return redirect(url_for("auth.login"))
     message = session.pop("message", None)
     user_id = session["user_id"]
 
@@ -169,18 +164,20 @@ def user_master():
                 user_email = request.form.get("user_email", "")
                 new_user_id = request.form.get("user_id", "")
                 password = request.form.get("password", "")
-                print(password)
-                # ハッシュ化
-                password_hash = generate_password_hash(password)
-                print(password_hash)
 
                 # 登録データ作成
                 update_data = {}
                 if new_user_id:
+                    if not is_valid_login_id(new_user_id):
+                        session["message"] = "ログインIDには大文字小文字の英数字とアンダースコア(_)のみ入力可能です。" 
+                        return redirect(url_for("master.user_master"))
                     update_data["user_id"] = new_user_id
                 if user_email:
                     update_data["email"] = user_email
-                if password_hash:
+                if password:
+                    password_hash = generate_password_hash(password)
+                    # ハッシュ化
+                    print(f"ハッシュ化：{password_hash}")
                     update_data["password_hash"] = password_hash
                 
                 if not update_data:
@@ -202,7 +199,6 @@ def user_master():
         department = request.form.get("department", "")
         name = request.form.get("name", "")
         email = request.form.get("email", "")
-        print(employee_no)
 
         if mode == "insert":
             # 登録処理

@@ -14,7 +14,7 @@ if not logger.hasHandlers():
     logger.addHandler(handler)
 
 # エラー発生時に一括でロギング & Sentry送信
-# 呼び出し例:log_error("エラーメッセージ", 例外[省略可], ユーザーID[省略可], 辞書型のその他情報[省略可])
+# 呼び出し例:log_error("エラーメッセージ", 例外[省略可], ログインID[省略可], 辞書型のその他情報[省略可])
 def log_error(message: str, exception: Exception = None, user_id=None, extra: dict = None):
     # ローカルにエラーログ出力
     error_msg = f"{message}: {str(exception)}" if exception else message
@@ -23,7 +23,7 @@ def log_error(message: str, exception: Exception = None, user_id=None, extra: di
     # Sentryにログの内容を送信
     with sentry_sdk.push_scope() as scope:
         # 追加情報のセット
-        if user_id: # ユーザーID
+        if user_id: # ログインID
             scope.set_user({"id": user_id})
         if extra: # その他
             for k, v in extra.items():

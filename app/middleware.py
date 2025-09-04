@@ -1,22 +1,19 @@
-from flask import request, session, render_template
+from flask import request, session, render_template, abort
+from app import constants
 
-# ログイン不要なパス
-EXEMPT_PATHS = {'/login', '/logout', '/error', '/'}
-
-# ログイン必須なパス（例：管理画面など）
-AUTHORIZED_PATH = {'/send_email', '/recipient_master', '/mail_master', '/user_master'}
+# ログイン必須なパス
+authorized_path = constants.AUTHORIZED_PATH
 
 # それぞれ全リクエストを対象に行う
 
+# ログイン認証確認
 def require_login(app):
     @app.before_request
     def _require_login():
-        #print("パス:", request.path)
-        #print("セッション:", dict(session))
+        if request.path in authorized_path and 'user_id' not in session:
+            abort(401)
 
-        if request.path in AUTHORIZED_PATH and 'user_id' not in session:
-            return render_template('error.html', message='401 - 認証が必要です。'), 401
-
+# キャッシュを無効化
 def no_cache_headers(app):
     @app.after_request
     def _add_headers(response):

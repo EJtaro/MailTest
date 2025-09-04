@@ -22,8 +22,8 @@ def is_valid_uuid(value):
 
 # パスワード自動生成
 def generate_password(length=12):
-    # string.ascii_letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    # string.digits = '0123456789'
+    # string.ascii_letters = 大文字小文字('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    # string.digits = 数字('0123456789')
     allowed_chars = string.ascii_letters + string.digits + "_"
 
     return ''.join(secrets.choice(allowed_chars) for _ in range(length))
@@ -65,15 +65,3 @@ def _to_jst(dt_utc):
     if not isinstance(dt_utc, datetime):
         dt_utc = datetime.fromisoformat(dt_utc)
     return dt_utc.astimezone(ZoneInfo("Asia/Tokyo"))
-
-
-
-
-# middlewareで制御するので不要
-#def login_required(f):
-#    @wraps(f)  # fのメタ情報（関数名など）を保つためのデコレーター
-#    def decorated_function(*args, **kwargs):   # セッションに'user_id'が無ければログインしていないと判断
-#        if 'user_id' not in session:
-#            return redirect(url_for('auth.login'))
-#        return f(*args, **kwargs)  # ログイン済みなら元の関数を実行
-#    return decorated_function

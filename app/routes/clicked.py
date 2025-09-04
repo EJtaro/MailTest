@@ -29,7 +29,6 @@ def url_clicked():
     try:
         result = get_email_delivered_by_mail_id_and_recipient_id(mail_id, recipient_id)
         print(f"取得結果：{ result }")
-        print(f"recipientsの中身: {result.get('recipients')}")
 
         if not result or not result.get("recipients"):
             print("パラメータ値が未登録")

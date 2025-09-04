@@ -15,9 +15,9 @@
         <p style="color:red;">{{ error }}</p>
     {% endif %}
     <form method = "POST">
-        <label>ユーザー名：</label><input type="text" name = "username" value = "{{ username }}" maxlength="50" required>
+        <label>ログインID：</label><input type="text" name = "username" value = "{{ username }}" maxlength="50">
         <br><br>
-        <label>パスワード：</label><input type="password" name = "password" value = "{{ password }}" required>
+        <label>パスワード：</label><input type="password" name = "password" value = "{{ password }}">
         <br><br>
         <button type="submit">ログイン</button>
     </form>
